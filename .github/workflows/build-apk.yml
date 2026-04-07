@@ -1,0 +1,60 @@
+name: Build Android APKs natively 🚀
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compile Android Release Binary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Setup Java 17 for React Native
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Dependencies
+        run: |
+          npm install -g expo-cli
+
+      - name: Compile Student APK
+        run: |
+          cd SmartCampus_Student
+          npm install
+          npx expo prebuild --platform android --clean
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Compile Admin APK
+        run: |
+          cd SmartCampus_Admin
+          npm install
+          npx expo prebuild --platform android --clean
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload Student APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartCampus_Student_APK
+          path: SmartCampus_Student/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Admin APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartCampus_Admin_APK
+          path: SmartCampus_Admin/android/app/build/outputs/apk/release/app-release.apk
